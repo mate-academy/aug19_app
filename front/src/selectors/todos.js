@@ -8,7 +8,7 @@ export const getTodos = createSelector(
       return null;
     }
     return todos.map(todo => {
-      const user = users.find(user => user.id === todo.user_id);
+      const user = users.find(user => user.id === todo.userId);
       return {
         ...todo,
         userName: user ? user.name : '—'

@@ -16,6 +16,18 @@ function hash(password) {
   return crypto.createHmac('sha256', 'abcdefg').update(password).digest('hex');
 }
 
+function transformUser(row) {
+  return row;
+}
+
+function transformTodo(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    userId: row.user_id
+  };
+}
+
 client.connect();
 
 app.use(session({
@@ -64,7 +76,7 @@ app.get('/status', auth, (req, res) => {
 
 app.get('/api/users', auth, (req, res) => {
   client.query('SELECT * FROM users ORDER BY id', (err, dbResponse) => {
-    res.json(dbResponse.rows);
+    res.json(dbResponse.rows.map(transformUser));
   });
 });
 
@@ -75,20 +87,20 @@ app.get('/api/users/:id', auth, (req, res) => {
     } else if (dbResponse.rows.length === 0) {
       res.status(404).send('Not found');
     } else {
-      res.json(dbResponse.rows[0]);
+      res.json(transformUser(dbResponse.rows[0]));
     }
   });
 });
 
 app.get('/api/todos', auth, (req, res) => {
   client.query('SELECT * FROM todos', (err, dbResponse) => {
-    res.send(dbResponse.rows);
+    res.send(dbResponse.rows.map(transformTodo));
   });
 });
 
 app.get('/api/todos/:id', auth, (req, res) => {
   client.query('SELECT * FROM todos WHERE id = $1', [+req.params.id], (err, dbResponse) => {
-    res.json(dbResponse.rows[0]);
+    res.json(transformTodo(dbResponse.rows[0]));
   });
 });
 
@@ -110,7 +122,7 @@ app.put('/api/users/:id', auth, bodyParser.json(), (req, res) => {
       res.status(400).json({error: 'No such user'});
       return;
     }
-    res.json(dbResponse.rows[0]);
+    res.json(transformUser(dbResponse.rows[0]));
   });
 });
 
@@ -143,7 +155,7 @@ app.put('/api/todos/:id', auth, bodyParser.json(), (req, res) => {
       res.status(400).json({error: 'No such todo'});
       return;
     }
-    res.json(dbResponse.rows[0]);
+    res.json(transformTodo(dbResponse.rows[0]));
   });
 });
 
