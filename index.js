@@ -127,7 +127,11 @@ app.put('/api/users/:id', auth, bodyParser.json(), (req, res) => {
 });
 
 app.delete('/api/users/:id', auth, (req, res) => {
-  client.query('DELETE FROM users WHERE id = $1', [+req.params.id], (err, dbResponse) => {
+  const userId = +req.params.id;
+  if (userId === 1) {
+    res.status(400).json({error: 'Cannot delete the main user'});
+  }
+  client.query('DELETE FROM users WHERE id = $1', [userId], (err, dbResponse) => {
     if (dbResponse.rowCount === 0) {
       res.status(400).json({error: 'No such user'});
       return;
